@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Controller</title>
+    <script src="/js/scripts.js" defer></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Home Controller</h1>
+        <h1>Test GPT Endpoint</h1>
+    
+        <!-- Input field for the prompt -->
+        <label for="prompt">Enter your prompt:</label>
+        <input type="text" id="prompt" placeholder="Type something..." onkeydown="checkEnter(event)">
+        <button onclick="sendPrompt()">Send Prompt</button>
+    
+        <!-- Display the response -->
+        <pre id="response"></pre>
+        <h4>States: <pre id="json-output">Loading...</pre></h4>
+        <h2>Thermostat: <span id="thermostat">Loading...</span></h2>
+        <h2>Lock Status: <span id="lock-status">Loading...</span></h2>
+        <h2>Hexagons: <span id="hexagon-status">Loading...</span></h2>
+        <h2>Kitchen LEDs: <span id="hexagon-status">Loading...</span></h2>
+        <h2>Bedroom light: <span id="hexagon-status">Loading...</span></h2>
+        <h2>Robot Vacuum: <span id="hexagon-status">Loading...</span></h2>
+        <h2>Litter Robot: <span id="hexagon-status">Loading...</span></h2>
+
+
+        <button class="btn btn-primary" onclick="updateState()">Refresh State</button>
+        
+    </div>
+</body>
+</html>
+
