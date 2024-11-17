@@ -35,6 +35,10 @@ class KasaController:
             elif value == 0:
                 await self.devices[device].turn_off()
 
+    async def all_on(self):
+        for device in self.devices.keys():
+            await self.devices[device].turn_on()
+
 
 async def main():
     kasa = KasaController()

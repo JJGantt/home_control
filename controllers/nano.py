@@ -7,12 +7,15 @@ import random
 from helpers.new_codes import new_codes
 import asyncio
 from .govee import GoveeController
+from .kswitch import KasaController
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 api_key = os.getenv("NANO_API_KEY")
 
+#Controls the hexagon lighting. 
+#Includes functionality to display the weather and timers on the hexagons
 class NanoController:
     def __init__(self):
         self.auth_token = api_key
@@ -52,6 +55,8 @@ class NanoController:
         if "effect" in self.state:
             print(self.state)
             self.set_effect(self.state["effect"])
+        else:
+            self.set_effect("Cocoa Beach")
     
     def set_brightness(self, brightness):
             url = self.base_url + "/state"
@@ -128,6 +133,8 @@ class NanoController:
 
     async def set_timer(self, seconds):
         govee = GoveeController()
+        kasa = KasaController()
+        await kasa.start()
         for device in govee.devices.keys():
             await govee.get_state(device)
             govee.states[device]["original_color"] = govee.states[device]["colorRgb"]
@@ -163,8 +170,10 @@ class NanoController:
             await asyncio.sleep(seconds_per_panel)
             self.dynamic({i: end_color})
 
-        self.set_brightness(100)
+        await kasa.all_on()
+        await asyncio.sleep(0.25)
         await govee.trigger_alarm()
+        self.set_brightness(100)
         self.dynamic(self.get_end_animation())
         
         await asyncio.sleep(15)
@@ -243,7 +252,12 @@ class NanoController:
         self.dynamic(color_dict)
 
 
-    
+async def main():
+    nano = NanoController()
+    await nano.set_timer(30)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
 
 

@@ -23,6 +23,7 @@ class SmartRentController:
         self.lock = self.api.get_locks()[0]
         self.thermostat = self.api.get_thermostats()[0]
 
+    #Maintain logged in status
     async def relogin(self):
         while True:
             await self.login()

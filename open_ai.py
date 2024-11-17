@@ -1,13 +1,11 @@
 from openai import OpenAI
 import json
-from controllers import SmartRentController
 import asyncio
 from dotenv import load_dotenv
 import os
 from logger import logger
 
 load_dotenv()
-
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 '''
@@ -126,7 +124,7 @@ class FunctionCaller:
                             "Hourly_Weather",
                             "Timer"
                             ],
-                            "description": "Mode to set the hexagons to"
+                            "description": "Mode to set the hexagons to."
                         },
                         "time_length": {
                             "type": "number",
@@ -168,7 +166,7 @@ class FunctionCaller:
                                     "kitchen_ceiling_light_1",
                                     "kitchen_ceiling_light_2"
                                 ],
-                                "description": "The identifier for the smart light device."
+                                "description": "The identifier for the smart light device. 'spotlights' or 'spotlight' referes to both of the kitchen ceiling lights"
                             },
                             "action": {
                                 "type": "string",
@@ -228,9 +226,15 @@ class FunctionCaller:
 
         ]
 
+    #Takes commands as strings and sends them to OpenAI API along with tool definitions and context.
+    #Uses the structured tool use output to execute the required functions
     async def prompt(self, message):
         messages = []
         messages.append({"role": "system", "content": "You use the supplied tools to control various home electronics for the user"})
+        messages.append({"role": "system", "content": "Use the Timer mode of the set_hexagons function if the user asks to set a timer"})
+        messages.append({"role": "system", "content": "The user's input comes from a voice-to-text tool and will occasionally contain typos or innnacuracies."})
+        messages.append({"role": "system", "content": "You are to do your best to decifer the intent of the user despite this, and always come up with the most fitting tool calls"})
+        messages.append({"role": "system", "content": "For example: 'Turn on the pool night' is obviously meant to be 'Turn on the pool light'"})
 
         logger.info(f"prompt: {message}")
         messages.append({"role": "user", "content": message})
@@ -250,10 +254,9 @@ class FunctionCaller:
         
         tasks = [self.handle_tool_call(tool_call) for tool_call in tool_calls]
         results = await asyncio.gather(*tasks)
-
+        print(f"results: {results}")
         logger.info(results)
-
-        return "" 
+        return results 
     
     async def handle_tool_call(self, tool_call):
         function_name = tool_call.function.name
@@ -266,6 +269,7 @@ class FunctionCaller:
             result = await func(**arguments) 
         return result
 
+    #Changes the state of the raspberry pi display
     async def control_display(self, mode, value=None):
         pisplay = self.controllers["pisplay"]
 
@@ -273,6 +277,7 @@ class FunctionCaller:
             pisplay.open_weather()
             return {"response": {"display_mode": "weather"}}
 
+    #Sets the temperature of the thermostat
     async def set_thermostat_temperature(self, temperature=None, change=None):
         smart_rent = self.controllers["smart_rent"]
 
@@ -307,6 +312,7 @@ class FunctionCaller:
                 return {"status": "error",
                         "error": str(e)}
 
+    #Changes the state of the door lock
     async def lock(self, lock=None):
         smart_rent = self.controllers["smart_rent"]  
 
@@ -318,13 +324,15 @@ class FunctionCaller:
             locked = await smart_rent.get_locked()
             return {"status": "success",
                     "data": {"locked": locked}}
-        
+
+    #Changes the TV volume    
     async def tv_volume(self, amount):
         tv = self.controllers["tv"]
         tv.change_volume(amount)
         return {"status": "success",
                 "data": {"volume_change": amount}}
-    
+
+    #Sets the brightness, color, or mode of the hexagon lights    
     async def set_hexagons(self, mode=None, brightness=None, time_length=None, effect=None):
         nano = self.controllers["nano"]
         nano.cancel_previous_timer()
@@ -332,12 +340,10 @@ class FunctionCaller:
         try:
             if brightness != None:
                 response = nano.set_brightness(brightness)
-                return {"status": "success",
-                        "data": {"response": response}}
+                return {"status": "success"}
             elif effect != None:
                 response = nano.set_effect(effect)
-                return {"status": "success",
-                        "data": {"response": response}}
+                return {"status": "success"}
             if mode != None:
                 if mode == "Previous":
                     nano.set_previous_state()
@@ -359,6 +365,7 @@ class FunctionCaller:
             return {"status": "error",
                     "error": str(e)}
     
+    #Controls the Govee and Kasa lighting
     async def control_lights(self, device, action, value):
         govee = self.controllers["govee"]
         kasa = self.controllers["kasa"]
@@ -375,7 +382,8 @@ class FunctionCaller:
                         await kasa.power_state(device, value)
                     await govee.power_state(device, value)
                 else:
-                    await kasa.power_state(device, value)    
+                    if device == "pool_table_light":
+                        await kasa.power_state(device, value)    
                     await govee.power_state(device, value)   
             elif action == "absolute_brightness":
                 await govee.set_brightness(device, value)
@@ -401,6 +409,7 @@ class FunctionCaller:
         return {"status": "success",
                 "data": {"prettiest_girl": "lyz"}}
 
+#Testing
 async def main():
     caller = FunctionCaller()
     await caller.prompt("make it 72 in here")

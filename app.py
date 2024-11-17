@@ -32,42 +32,40 @@ controllers = {
 state = StateManager(controllers)
 function_caller = FunctionCaller(controllers, state)
 
+#Handle asyncronous start up functions
 @app.before_serving
 async def startup():
     await smart_rent.start()
     await kasa.start()
-    #asyncio.create_task(voice.listen())
 
-    #await state.full_update()
-
+#Basic display for debugging and testing
 @app.route('/')
 async def index():
     await state.full_update()
     return await render_template('index.html')
 
+#Return current state of all devices
 @app.route('/api/state', methods=['GET'])
 async def current_state():
     return jsonify(state.get_states()) 
 
+#Send commands as strings to be converted and executed as function calls
 @app.route('/api/gpt', methods=['POST'])
 async def gpt(): 
     data = await request.get_json()  
     prompt = data.get('prompt')
-    siri_response = await function_caller.prompt(prompt)
+    response = await function_caller.prompt(prompt)
 
-    return jsonify({"siri": siri_response})
+    return jsonify(response)
 
-@app.route('/api/audio', methods=['POST'])
-async def receive_audio():
-    # Receive raw audio data from ESP32
-    audio_data = await request.data
 
-    # Process the audio data to check for the wake word
-    if voice.process_audio(audio_data):
-        wake_word_callback()
-        return "Wake word detected", 200
-    else:
-        return "No wake word detected", 204
+
+'''
+---   All endpoints below this point are not currently used.    ---
+---   The /api/gpt endpoint handles all incomming commands.     ---
+'''
+
+
 
 @app.route('/api/display_on', methods=['GET'])
 def display_on():
