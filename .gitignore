@@ -1,3 +1,56 @@
-.env
-logs
+# Virtual environment
+.venv/
 venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Logs and database files
+logs/
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# Environment variables and secrets
+.env
+.envrc
+*.pem
+*.key
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Temporary files
+tmp/
+temp/
+
+# Test coverage and profiling data
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+*.prof
+*.out
+*.pid
+
+# Ignore reference files
+*.bak
+*.old
