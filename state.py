@@ -3,6 +3,17 @@ from controllers.nano import NanoController
 from controllers.govee import GoveeController
 from controllers.tv import TvController
 from controllers.srent import SmartRentController
+from dataclasses import dataclass, asdict
+
+@dataclass
+class NanoState:
+    brightness: int
+    color: str
+
+nano_state = NanoState(brightness=255, color="blue")
+nano_dict = asdict(nano_state)
+print(nano_dict)  # {'brightness': 255, 'color': 'blue'}
+
 
 '''
 controllers = {
@@ -33,16 +44,15 @@ class StateManager:
         await self.govee_update()
         await self.therm_update()
         await self.lock_update()
+        await self.nano_update()
 
-    def nano_update(self):
-        nano = self.controllers["nano"]
-        nano.get_current_state()
-        print(nano.state)
-        self.update_state('Hexagons', {
-            #'effect': nano.state["effect"], 
-            'brightness': nano.state["brightness"], 
-            'timer': str(nano.timer_task)
-        })
+    async def nano_update(self):
+        nano: NanoController = self.controllers["nano"]
+
+        await nano.set_state()
+        state = await nano.get_state()
+        
+        self.update_state('Hexagons', asdict(state))
 
     async def govee_update(self):
         govee = self.controllers["govee"]

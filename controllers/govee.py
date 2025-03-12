@@ -20,15 +20,15 @@ class GoveeController():
                 "sku": "H6072",
                 "address": "D1:0C:D2:32:37:38:35:9A"
             },
-            "kitchen_leds": {
+            "cabinet_leds": {
                 "sku": "H6110",
                 "address": "70:88:A4:C1:38:F0:11:4B"
             },
-            "kitchen_island_light": {
+            "island_light": {
                 "sku": "H6008",
                 "address": "E6:9A:D0:C9:07:80:5A:3E"
             },
-            "entry_light": {
+            "entryway_light": {
                 "sku": "H6008",
                 "address": "28:D7:D0:C9:07:86:6A:F4"
             },
@@ -139,7 +139,15 @@ class GoveeController():
             return response
 
     async def set_color(self, device, value):
-        await self.control(device, "devices.capabilities.color_setting", "colorRgb", value)
+        if isinstance(value, int):
+            await self.control(device, "devices.capabilities.color_setting", "colorRgb", value)
+        else:
+            r,g,b = value
+            dec_color = (r << 16) | (g << 8) | b
+            await self.control(device, "devices.capabilities.color_setting", "colorRgb", dec_color)
+
+
+
 
     #value between 2000-9000
     async def set_temperature(self, device, value):

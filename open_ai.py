@@ -4,10 +4,14 @@ import asyncio
 from dotenv import load_dotenv
 import os
 from logger import logger
+from controllers.nano.nano import NanoController
+
 
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
-
+nano_ip = os.getenv("NANO_IP_ADDRESS")
+nano_api_key = os.getenv("NANO_API_KEY")
+nano_port = os.getenv("NANO_PORT")
 '''
 controllers = {
     "nano": nano,
@@ -19,6 +23,12 @@ controllers = {
     "pisplay": pisplay
 }
 '''
+
+nano = NanoController(
+    ip_address=nano_ip,
+    auth_token=nano_api_key,
+    port=nano_port
+)
  
 class FunctionCaller:
     def __init__(self, controllers, state):
@@ -99,8 +109,8 @@ class FunctionCaller:
                         "type": "object",
                         "properties": {
                         "brightness": {
-                            "type": "number",
-                            "description": "Brightness level for the hexagons. Only use if user specificly mentions brightness. Can be sent as only argument"
+                            "type": "integer",
+                            "description": "Brightness level for the hexagons (0 - 100). Only use if user specificly mentions brightness. Can be sent as only argument"
                         },
                         "effect": {
                             "type": "string",
@@ -112,7 +122,8 @@ class FunctionCaller:
                                 "Morning Sky",
                                 "Prism",
                                 "Vintage Modern",
-                                "Waterfall"
+                                "Waterfall",
+                                "Christmas Glitter"
                             ],
                             "description": "The effect(color scheme) to apply to the hexagons, can be picked at random if not specified"
                         },
@@ -122,6 +133,8 @@ class FunctionCaller:
                             "Effect",
                             "Previous",
                             "Hourly_Weather",
+                            "Precipitation",
+                            "Temperature",
                             "Timer"
                             ],
                             "description": "Mode to set the hexagons to."
@@ -129,6 +142,10 @@ class FunctionCaller:
                         "time_length": {
                             "type": "number",
                             "description": "Time length to set the timer in minutes(portions of minutes are acceptable), required when mode is 'Timer'"
+                        },
+                        "hour_interval": {
+                            "type": "integer",
+                            "description": "Hour interval for 'Temperature' and 'Precipitation' modes, not required."
                         }
                         },
                         "required": [
@@ -159,14 +176,13 @@ class FunctionCaller:
                                 "type": "string",
                                 "enum": [
                                     "bedroom_lamp",
-                                    "kitchen_leds",
-                                    "kitchen_island_light",
+                                    "cabinet_leds",
+                                    "island_light",
                                     "pool_table_light",
-                                    "entry_light",
-                                    "kitchen_ceiling_light_1",
-                                    "kitchen_ceiling_light_2"
+                                    "entryway_light",
+                                    "kitchen_spotlights",
                                 ],
-                                "description": "The identifier for the smart light device. 'spotlights' or 'spotlight' referes to both of the kitchen ceiling lights"
+                                "description": "The identifier for the smart light device."
                             },
                             "action": {
                                 "type": "string",
@@ -234,7 +250,7 @@ class FunctionCaller:
         messages.append({"role": "system", "content": "Use the Timer mode of the set_hexagons function if the user asks to set a timer"})
         messages.append({"role": "system", "content": "The user's input comes from a voice-to-text tool and will occasionally contain typos or innnacuracies."})
         messages.append({"role": "system", "content": "You are to do your best to decifer the intent of the user despite this, and always come up with the most fitting tool calls"})
-        messages.append({"role": "system", "content": "For example: 'Turn on the pool night' is obviously meant to be 'Turn on the pool light'"})
+        messages.append({"role": "system", "content": "For example: 'on the tool night' is meant to be 'Turn on the pool light'"})
 
         logger.info(f"prompt: {message}")
         messages.append({"role": "user", "content": message})
@@ -254,7 +270,6 @@ class FunctionCaller:
         
         tasks = [self.handle_tool_call(tool_call) for tool_call in tool_calls]
         results = await asyncio.gather(*tasks)
-        print(f"results: {results}")
         logger.info(results)
         return results 
     
@@ -333,24 +348,33 @@ class FunctionCaller:
                 "data": {"volume_change": amount}}
 
     #Sets the brightness, color, or mode of the hexagon lights    
-    async def set_hexagons(self, mode=None, brightness=None, time_length=None, effect=None):
+    async def set_hexagons(self, mode=None, brightness=None, time_length=None, effect=None, hour_interval=1):
         nano = self.controllers["nano"]
-        nano.cancel_previous_timer()
-
+        await nano.cancel_task()
+        
+        
         try:
             if brightness != None:
-                response = nano.set_brightness(brightness)
+                response = await nano.set_brightness(brightness)
                 return {"status": "success"}
             elif effect != None:
-                response = nano.set_effect(effect)
+                response = await nano.set_effect(effect)
                 return {"status": "success"}
             if mode != None:
                 if mode == "Previous":
-                    nano.set_previous_state()
+                    await nano.set_previous_state()
                     return {"status:" "success"
                             "data": {"mode": mode}}
                 elif mode == "Hourly_Weather":
-                    nano.set_hourly_forecast()
+                    await nano.set_hourly_forecast()
+                    return {"status:" "success"
+                            "data": {"mode": mode}}
+                elif mode == "Temperature":
+                    await nano.set_temperature(hour_interval = hour_interval)
+                    return {"status:" "success"
+                            "data": {"mode": mode}}
+                elif mode == "Precipitation":
+                    await nano.set_precipitation(hour_interval = hour_interval)
                     return {"status:" "success"
                             "data": {"mode": mode}}
                 elif mode == "Timer":
@@ -358,7 +382,7 @@ class FunctionCaller:
                         return {"status": "success",
                                 "data": {"time": 0}}
                     seconds = int(time_length * 60)
-                    nano.timer_task = asyncio.create_task(nano.set_timer(seconds))
+                    nano.hex_task = asyncio.create_task(nano.timer(seconds))
                     return {"status": "success",
                             "data": {"time": time_length}}
         except Exception as e:
@@ -373,9 +397,8 @@ class FunctionCaller:
             if action == "power_state":
                 if value == 1:
                     if device in [
-                        "entry_light", 
-                        "kitchen_ceiling_light_1", 
-                        "kitchen_ceiling_light_2",
+                        "entryway_light", 
+                        "kitchen_spotlights"
                     ]:
                         await kasa.power_state("kitchen_ceiling_lights", value)
                     else:

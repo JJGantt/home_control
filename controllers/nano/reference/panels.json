@@ -1,0 +1,124 @@
+{
+    "numPanels": 7,
+    "sideLength": 67,
+    "positionData": [
+        {
+            "panelId": 30344,
+            "x": 0,
+            "y": 580,
+            "o": 0,
+            "shapeType": 7
+        },
+        {
+            "panelId": 26383,
+            "x": 0,
+            "y": 464,
+            "o": 300,
+            "shapeType": 7
+        },
+        {
+            "panelId": 19622,
+            "x": 0,
+            "y": 348,
+            "o": 60,
+            "shapeType": 7
+        },
+        {
+            "panelId": 29596,
+            "x": 0,
+            "y": 232,
+            "o": 120,
+            "shapeType": 7
+        },
+        {
+            "panelId": 11739,
+            "x": 0,
+            "y": 116,
+            "o": 120,
+            "shapeType": 7
+        },
+        {
+            "panelId": 38168,
+            "x": 0,
+            "y": 0,
+            "o": 180,
+            "shapeType": 7
+        },
+        {
+            "panelId": 0,
+            "x": 59,
+            "y": 614,
+            "o": 300,
+            "shapeType": 12
+        }
+    ]
+}
+panels: [(30344,
+    580), (26383,
+    464), (19622,
+    348), (29596,
+    232), (11739,
+    116), (38168,
+    0)
+]
+[
+    30344,
+    26383,
+    19622,
+    29596,
+    11739,
+    38168
+]
+
+
+
+{
+    "brightness": {
+        "value": 34,
+        "max": 100,
+        "min": 0
+    },
+    "colorMode": "effect",
+    "ct": {
+        "value": 6500,
+        "max": 6500,
+        "min": 1200
+    },
+    "hue": {
+        "value": 0,
+        "max": 360,
+        "min": 0
+    },
+    "on": {
+        "value": True
+    },
+    "sat": {
+        "value": 0,
+        "max": 100,
+        "min": 0
+    }
+}
+{
+    "effectsList": [
+        "Beatdrop",
+        "Blaze",
+        "Cocoa Beach",
+        "Cotton Candy",
+        "Date Night",
+        "Hip Hop",
+        "Hot Sauce",
+        "Jungle",
+        "Lightscape",
+        "Morning Sky",
+        "Northern Lights",
+        "Pop Rocks",
+        "Prism",
+        "Starlight",
+        "Sundown",
+        "Vibrant Sunrise",
+        "Vintage Modern",
+        "Waterfall",
+        "moonlight"
+    ],
+    "select": "Cocoa Beach"
+}

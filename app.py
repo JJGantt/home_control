@@ -1,13 +1,13 @@
 from quart import Quart, request, jsonify, render_template
 import asyncio
 from controllers import (
-    NanoController, 
     GoveeController, 
     KasaController, 
     SmartRentController, 
     TvController, 
     DisplayController
 )
+from controllers.nano.nano import NanoController
 from state import StateManager
 from open_ai import FunctionCaller
 from logger import logger
@@ -57,6 +57,17 @@ async def gpt():
     response = await function_caller.prompt(prompt)
 
     return jsonify(response)
+
+@app.route('/api/hexupdate', methods=['GET'])
+async def hex_update():
+    logger.info("hex weather update")
+    #await nano.update_weather()
+
+    await nano.set_temperature(hour_interval=2)
+
+    govee.set_color("island_light", nano.state.temp_now_rgb)
+
+    return jsonify({"status": "weather updated"})
 
 
 
