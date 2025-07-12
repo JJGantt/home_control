@@ -6,7 +6,10 @@ class TvController:
     def __init__(self):
         cec.init()
         devices = cec.list_devices()
-        self.tv = devices[0]
+        
+
+
+        #self.tv = devices[0]
 
     def set_active(self):
         cec.set_active_source()

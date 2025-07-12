@@ -487,25 +487,33 @@ class NanoController:
             (0, 0, 255),      # Blue
             (0, 255, 0),      # Green
             (255, 255, 0),    # Yellow
-            (255, 0, 0)       # Red
+            (255, 156, 0),       
+            (255, 0, 0),        # 100s
+            (255, 0, 0)
         ]
 
         color_dict = {}
+        max_index = len(color_list) - 1
+
         for i, temp in enumerate(temps):
             tens = int(temp // 10)
             ones = temp % 10   
             accent_factor = int(ones * 3 // 10 - 1)
 
-            base_color = color_list[max(tens - 3, 0)]
-            accent_color = color_list[max(tens - 3 + accent_factor, 0)]
+            base_index = min(max(tens - 3, 0), max_index)
+            accent_index = min(max(tens - 3 + accent_factor, 0), max_index)
 
-            average_color = tuple(map(lambda a, b: int((a + b) / 2), base_color, accent_color))
+            base_color = color_list[base_index]
+            accent_color = color_list[accent_index]
 
-            color_dict[i] = ( base_color + (20,), average_color + (20,))
+            average_color = tuple(
+                int((a + b) / 2) for a, b in zip(base_color, accent_color)
+            )
 
+            color_dict[i] = (base_color + (20,), average_color + (20,))
 
         return color_dict
-
+    
     def temp_to_color(self, temp: float):
         color_list = [
             (255, 255, 255),  # Bright white
@@ -514,14 +522,19 @@ class NanoController:
             (0, 0, 255),      # Blue
             (0, 255, 0),      # Green
             (255, 255, 0),    # Yellow
-            (255, 0, 0)       # Red
+            (255, 156, 0),       
+            (255, 0, 0),        # 100s
+            (255, 0, 0)
         ]
 
         tens = int(temp // 10)
         ones = temp % 10   
 
-        low_color = color_list[max(tens - 3, 0)]
-        high_color = color_list[max(tens - 2, 0)]
+        index_low = min(max(tens - 3, 0), len(color_list) - 1)
+        index_high = min(max(tens - 2, 0), len(color_list) - 1)
+
+        low_color = color_list[index_low]
+        high_color = color_list[index_high]
 
         factor = ones / 10
 

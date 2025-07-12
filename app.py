@@ -65,7 +65,11 @@ async def hex_update():
 
     await nano.set_temperature(hour_interval=2)
 
-    govee.set_color("island_light", nano.state.temp_now_rgb)
+    print(nano.state.temp_now_rgb)
+
+    await govee.set_color("island_light", nano.state.temp_now_rgb)
+    await govee.set_color("cabinet_leds", nano.state.temp_now_rgb)
+    
 
     return jsonify({"status": "weather updated"})
 
